@@ -44,9 +44,7 @@ impl Zombies {
                 Some(waker) => waker.wake(),
             }
         };
-        let sigid = unsafe {
-            signal_hook::register(signal_hook::SIGCHLD, handler)?
-        };
+        let sigid = unsafe { signal_hook::register(signal_hook::SIGCHLD, handler)? };
         Ok(Zombies { waker, sigid })
     }
 
@@ -54,9 +52,7 @@ impl Zombies {
         while let Some(()) = self.next().await {
             let mut status = 0;
             loop {
-                let pid = unsafe {
-                    libc::waitpid(-1, &mut status, 0)
-                };
+                let pid = unsafe { libc::waitpid(-1, &mut status, 0) };
                 if pid == till {
                     return Ok(());
                 } else if pid <= 0 {
@@ -88,20 +84,17 @@ async fn main() -> Result<(), Pid1Error> {
 
     use std::convert::TryInto;
     let child: i32 = match child.try_into() {
-            Ok(x) => x,
-            Err(e) => {
-                return Err(Pid1Error::ChildPidTooBig(child, e))
-            }
-        };
+        Ok(x) => x,
+        Err(e) => return Err(Pid1Error::ChildPidTooBig(child, e)),
+    };
 
     let int_child = move || {
         unsafe {
             libc::kill(child, libc::SIGINT); // ignoring errors
         }
     };
-    let sigid: signal_hook::SigId  = unsafe {
-        signal_hook::register(signal_hook::SIGINT, int_child)?
-    };
+    let sigid: signal_hook::SigId =
+        unsafe { signal_hook::register(signal_hook::SIGINT, int_child)? };
 
     Zombies::new()?.reap_till(child).await?;
 
@@ -114,6 +107,6 @@ fn get_command() -> Result<(String, Vec<String>), Pid1Error> {
     let _me = args.next();
     match args.next() {
         None => Err(Pid1Error::NoCommandGiven),
-        Some(cmd) => Ok((cmd, args.collect()))
+        Some(cmd) => Ok((cmd, args.collect())),
     }
 }
