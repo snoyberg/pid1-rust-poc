@@ -83,7 +83,7 @@ async fn main() -> Result<(), Pid1Error> {
     let child = std::process::Command::new(cmd).args(args).spawn()?.id();
 
     use std::convert::TryInto;
-    let child: i32 = match child.try_into() {
+    let child: libc::pid_t = match child.try_into() {
         Ok(x) => x,
         Err(e) => return Err(Pid1Error::ChildPidTooBig(child, e)),
     };
