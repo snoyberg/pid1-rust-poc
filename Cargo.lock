@@ -121,16 +121,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "foo"
-version = "0.1.0"
-dependencies = [
- "async-attributes 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "async-std 0.99.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.65 (registry+https://github.com/rust-lang/crates.io-index)",
- "signal-hook 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "fuchsia-zircon"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -293,6 +283,16 @@ dependencies = [
 name = "once_cell"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "pid1"
+version = "0.1.0"
+dependencies = [
+ "async-attributes 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "async-std 0.99.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.65 (registry+https://github.com/rust-lang/crates.io-index)",
+ "signal-hook 0.1.11 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "pin-project-lite"
