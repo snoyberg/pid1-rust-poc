@@ -88,13 +88,13 @@ async fn main() -> Result<(), Pid1Error> {
         Err(e) => return Err(Pid1Error::ChildPidTooBig(child, e)),
     };
 
-    let int_child = move || {
+    let interrupt_child = move || {
         unsafe {
             libc::kill(child, libc::SIGINT); // ignoring errors
         }
     };
     let sigid: signal_hook::SigId =
-        unsafe { signal_hook::register(signal_hook::SIGINT, int_child)? };
+        unsafe { signal_hook::register(signal_hook::SIGINT, interrupt_child)? };
 
     Zombies::new()?.reap_till(child).await?;
 
