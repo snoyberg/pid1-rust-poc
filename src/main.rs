@@ -52,7 +52,7 @@ impl Zombies {
         while let Some(()) = self.next().await {
             let mut status = 0;
             loop {
-                let pid = unsafe { libc::waitpid(-1, &mut status, 0) };
+                let pid = unsafe { libc::waitpid(-1, &mut status, libc::WNOHANG) };
                 if pid == till {
                     return Ok(());
                 } else if pid <= 0 {
