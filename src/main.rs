@@ -10,7 +10,7 @@ struct Zombies {
 
 impl Stream for Zombies {
     type Item = ();
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<()>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<()>> {
         let mut guard = self.waker.lock().unwrap();
         let pair = &mut guard;
         if pair.0 > 0 {
