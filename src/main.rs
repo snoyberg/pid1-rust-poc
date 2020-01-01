@@ -1,26 +1,9 @@
 use async_std::prelude::*;
-use async_std::task::{Context, Poll, Waker};
-use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use async_std::sync::{channel, Receiver};
 
 struct Zombies {
+    receiver: Receiver<()>,
     sigid: signal_hook::SigId,
-    waker: Arc<Mutex<(usize, Option<Waker>)>>,
-}
-
-impl Stream for Zombies {
-    type Item = ();
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<()>> {
-        let mut guard = self.waker.lock().unwrap();
-        let pair = &mut guard;
-        if pair.0 > 0 {
-            pair.0 -= 1;
-            Poll::Ready(Some(()))
-        } else {
-            pair.1 = Some(cx.waker().clone());
-            Poll::Pending
-        }
-    }
 }
 
 impl Drop for Zombies {
@@ -31,25 +14,22 @@ impl Drop for Zombies {
 
 impl Zombies {
     fn new() -> Result<Self, std::io::Error> {
-        let waker = Arc::new(Mutex::new((0, None)));
-
-        let waker_clone = waker.clone();
+        let (sender, receiver) = channel(1);
 
         let handler = move || {
-            let mut guard = waker_clone.lock().unwrap();
-            let pair: &mut (usize, Option<Waker>) = &mut guard;
-            pair.0 += 1;
-            match pair.1.take() {
-                None => (),
-                Some(waker) => waker.wake(),
-            }
+            let sender_clone = sender.clone();
+
+            async_std::task::spawn(async move {
+                sender_clone.send(()).await;
+            });
+            ()
         };
         let sigid = unsafe { signal_hook::register(signal_hook::SIGCHLD, handler)? };
-        Ok(Zombies { waker, sigid })
+        Ok(Zombies { receiver, sigid })
     }
 
-    async fn reap_till(mut self, till: i32) -> Result<(), Pid1Error> {
-        while let Some(()) = self.next().await {
+    async fn reap_till(self, till: i32) -> Result<(), Pid1Error> {
+        while let Some(()) = self.receiver.recv().await {
             let mut status = 0;
             loop {
                 let pid = unsafe { libc::waitpid(-1, &mut status, libc::WNOHANG) };
