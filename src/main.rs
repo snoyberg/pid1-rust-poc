@@ -36,13 +36,18 @@ impl Zombies {
         let waker_clone = waker.clone();
 
         let handler = move || {
-            let mut guard = waker_clone.lock().unwrap();
-            let pair: &mut (usize, Option<Waker>) = &mut guard;
-            pair.0 += 1;
-            match pair.1.take() {
-                None => (),
-                Some(waker) => waker.wake(),
-            }
+            let async_waker = waker_clone.clone();
+
+            async_std::task::spawn(async move {
+                let mut guard = async_waker.lock().unwrap();
+                let pair: &mut (usize, Option<Waker>) = &mut guard;
+                pair.0 += 1;
+                match pair.1.take() {
+                    None => (),
+                    Some(waker) => waker.wake(),
+                }
+            });
+            ()
         };
         let sigid = unsafe { signal_hook::register(signal_hook::SIGCHLD, handler)? };
         Ok(Zombies { waker, sigid })
